@@ -1,35 +1,53 @@
+require("dotenv").config();
 const express = require("express");
-const path = require("path");
 const http = require("http");
 const socket = require("socket.io");
-const { emit } = require("process");
+const path = require("path");
 
-const publicDirectoryPath = path.join(__dirname, "../public");
+const PORT = process.env.PORT || 3000;
+const publicDirectory = path.join(__dirname, "../public");
 
-const port = 3000;
 const app = express();
-const server = http.createServer(app); // this is done internally by express but here we need to do manually in order to get server object that we can pass to the socket and now we need to listen for server create instead of app crated from express
+const server = http.createServer(app);
 const io = socket(server);
 
-app.use(express.static(publicDirectoryPath));
-
-let val = 0;
+app.use(express.static(publicDirectory));
 
 io.on("connect", (socket) => {
-    console.log("coneected");
-    socket.emit("message", "welcome");
+    // on Connection
+    console.log("new client has connected to the server");
+    socket.emit("sendMessage", "welcome New User", () => {
+        console.log("the welome message is delivered");
+    });
+    ///////////////////////////////////////
+    //
+    //
+    ///////////////////////////////////////
 
-    socket.on("sendMessage", (value, callB) => {
-        // testing callBack
-        // if (true) {
-        //     return callB("returned ");
-        // }
+    socket.on("disconnect", () => {
+        socket.broadcast.emit("left", "User has left...");
+    });
 
-        io.emit("sendMessage", value);
+    socket.on("sendMessage", (message, callBack) => {
+        socket.broadcast.emit("sendMessage", message);
+        callBack();
+    });
+
+    ///////////////////////////////////////
+    //
+    //
+    ///////////////////////////////////////
+
+    socket.on("sendLocation", (locData) => {
+        socket.broadcast.emit(
+            "sendLocation",
+            `http://google.com/maps?q=${locData.lat},${locData.lon}`
+        );
+        console.log(locData);
     });
 });
 
-// app.listen(port, () => {
-server.listen(port, () => {
-    console.log("the app is u p and running on ", port);
+// app.listen(PORT, () => {
+server.listen(PORT, () => {
+    console.log("Server is up and waiting for requests on port : ", PORT);
 });

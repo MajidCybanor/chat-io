@@ -1,17 +1,31 @@
 const socket = io();
 
-document.getElementById("frm").addEventListener("submit", (e) => {
+socket.on("sendMessage", (msg) => {
+    console.log("Server : ", msg);
+});
+
+socket.on("left", (msg) => console.log(msg));
+
+socket.on("sendLocation", (location) => console.log(location));
+
+document.querySelector("#frm").addEventListener("submit", (e) => {
     e.preventDefault();
-    let msg = e.target[0].value;
-    socket.emit("sendMessage", msg, (val) => {
-        console.log("this is error", val);
+    let message = e.target.elements.message.value;
+    console.log("the value of msg is : ", message);
+    socket.emit("sendMessage", message, () => {
+        alert("message send");
     });
 });
 
-socket.on("message", (msg) => {
-    console.log("msg", msg);
-});
+document.querySelector("#locShare").addEventListener("click", () => {
+    if (!navigator.geolocation) {
+        return alert("Geolocation service is not supported by the browser");
+    }
 
-socket.on("sendMessage", (msg) => {
-    console.log(msg);
+    navigator.geolocation.getCurrentPosition((position) => {
+        socket.emit("sendLocation", {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+        });
+    });
 });

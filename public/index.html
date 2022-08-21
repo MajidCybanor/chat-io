@@ -1,19 +1,27 @@
+<!-- /socket.io/socket.io.js -->
 <!DOCTYPE html>
-
 <html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket I.O</title>
+</head>
+
 <body>
-    <h1>This is some page</h1>
+    <h1> This is main page</h1>
+
     <form id="frm">
-        <labe for="message"></labe>
-        <input id="message" placeholder="Enter Your Message" max="20" />
-        <button> Send </button>
+        <input name="message" placeholder="enter message here..." />
+        <button>send</button>
     </form>
+    <button id="locShare">Share Location </button>
+
 
 </body>
 
-
-<script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"> </script>
 <script src="/js/play.js"></script>
 
-</html>;
+</html>
