@@ -3,13 +3,18 @@ const express = require("express");
 const http = require("http");
 const socket = require("socket.io");
 const path = require("path");
+const cors = require("cors");
+const { ALL } = require("dns");
 
 const PORT = process.env.PORT || 3000;
 const publicDirectory = path.join(__dirname, "../public");
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
-const io = socket(server);
+const io = socket(server, {
+    cors: { origin: "*" },
+});
 
 app.use(express.static(publicDirectory));
 
