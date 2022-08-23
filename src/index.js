@@ -1,58 +1,53 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const http = require("http");
 const socket = require("socket.io");
-const path = require("path");
-const cors = require("cors");
-const { ALL } = require("dns");
 
-const PORT = process.env.PORT || 3000;
+const { users, addUser, removeUser, getUserRoom } = require("./utils");
+
 const publicDirectory = path.join(__dirname, "../public");
+const port = process.env.port || 3000;
 
 const app = express();
-app.use(cors());
+app.use(express.static(publicDirectory));
 const server = http.createServer(app);
-const io = socket(server, {
-    cors: { origin: "*" },
+const socketio = socket(server, {
+    cors: "*",
 });
 
-app.use(express.static(publicDirectory));
+socketio.on("connect", (socket) => {
+    console.log("we have new connect with id ", socket.id);
 
-io.on("connect", (socket) => {
-    // on Connection
-    console.log("new client has connected to the server");
-    socket.emit("sendMessage", "welcome New User", () => {
-        console.log("the welome message is delivered");
+    socket.on("addUser", (name, room) => {
+        console.log("hit on add add user");
+        try {
+            addUser(socket.id, name, room);
+            socket.join(room);
+            socket.broadcast
+                .to(room)
+                .emit("welcome", `${name} has joined the room`);
+            socket.emit("sendMessage", `Welcomes ${name}`);
+            console.log("add user success");
+        } catch (e) {
+            console.log(e);
+            socket.emit("sendMessage", e);
+        }
     });
-    ///////////////////////////////////////
-    //
-    //
-    ///////////////////////////////////////
+
+    socket.on("sendMessage", (msg) => {
+        let room = getUserRoom(socket.id);
+        console.log(room);
+        socket.to(room).emit("sendMessage", msg);
+    });
 
     socket.on("disconnect", () => {
-        socket.broadcast.emit("left", "User has left...");
-    });
-
-    socket.on("sendMessage", (message, callBack) => {
-        socket.broadcast.emit("sendMessage", message);
-        callBack();
-    });
-
-    ///////////////////////////////////////
-    //
-    //
-    ///////////////////////////////////////
-
-    socket.on("sendLocation", (locData) => {
-        socket.broadcast.emit(
-            "sendLocation",
-            `http://google.com/maps?q=${locData.lat},${locData.lon}`
-        );
-        console.log(locData);
+        let room = getUserRoom(socket.id);
+        removeUser(socket.id);
+        socket.to(room).emit("sendMessage", room);
     });
 });
 
-// app.listen(PORT, () => {
-server.listen(PORT, () => {
-    console.log("Server is up and waiting for requests on port : ", PORT);
+server.listen(port, () => {
+    console.log("the server is up on port ", port);
 });

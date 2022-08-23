@@ -1,31 +1,25 @@
-const socket = io();
+const socketio = io();
 
-socket.on("sendMessage", (msg) => {
-    console.log("Server : ", msg);
+console.log("from the play scritp");
+
+const joinForm = document.getElementById("form-username");
+const chatForm = document.getElementById("form-message");
+
+joinForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    let room = e.target.elements.room.value;
+    let username = e.target.elements.username.value;
+    socketio.emit("addUser", username, room);
 });
 
-socket.on("left", (msg) => console.log(msg));
-
-socket.on("sendLocation", (location) => console.log(location));
-
-document.querySelector("#frm").addEventListener("submit", (e) => {
+chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
     let message = e.target.elements.message.value;
-    console.log("the value of msg is : ", message);
-    socket.emit("sendMessage", message, () => {
-        alert("message send");
-    });
+    socketio.emit("sendMessage", message);
 });
 
-document.querySelector("#locShare").addEventListener("click", () => {
-    if (!navigator.geolocation) {
-        return alert("Geolocation service is not supported by the browser");
-    }
+socketio.on("sendMessage", (val) => console.log(val));
 
-    navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit("sendLocation", {
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-        });
-    });
-});
+socketio.on("welcome", (val) => console.log(val));
+
+socketio.on("disconnect", (val) => console.log(" >>> ", val));
